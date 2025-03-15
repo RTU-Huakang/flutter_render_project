@@ -30,6 +30,7 @@
 # # 运行 Flask 服务器（本地调试用）
 # if __name__ == '__main__':
 #     app.run(host="0.0.0.0", port=5000, debug=True)
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
@@ -48,7 +49,14 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
-CORS(app)  # 启用跨域支持
+# 配置 CORS，允许所有源，允许 Content-Type 头
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "allow_headers": ["Content-Type"],
+        "methods": ["GET", "POST", "OPTIONS"]
+    }
+})
 
 # 加载模型
 try:
@@ -108,9 +116,17 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     })
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
     """预测端点"""
+    # 处理 OPTIONS 请求
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
     try:
         # 获取请求数据
         data = request.json
@@ -140,12 +156,14 @@ def predict():
         logging.info(f"Prediction: {prediction}, Probabilities: {prediction_proba}")
 
         # 返回预测结果
-        return jsonify({
+        response = jsonify({
             'status': 'success',
             'prediction_level': int(prediction),
             'confidence_scores': prediction_proba.tolist(),
             'timestamp': datetime.now().isoformat()
         })
+        
+        return response
 
     except Exception as e:
         logging.error(f"Error during prediction: {str(e)}")
@@ -210,5 +228,13 @@ def get_sensor_thresholds():
     
     return jsonify(thresholds)
 
+@app.after_request
+def after_request(response):
+    """添加 CORS 头到所有响应"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    return response
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
