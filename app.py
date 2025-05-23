@@ -33,4 +33,7 @@ def predict():
         return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)  # 只显示错误，不显示普通访问日志
     app.run(host="0.0.0.0", port=5000, debug=True)
