@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
+from flask_cors import CORS
 
-# 初始化 Flask
 app = Flask(__name__)
+CORS(app)
 
 # 加载训练好的 GBT 模型
 model = joblib.load("fault_gbt_model.pkl")
@@ -27,7 +28,6 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# 运行 Flask 服务器（本地调试用）
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
 
