@@ -19,7 +19,8 @@ def predict():
 
         # 转换为 DataFrame
         input_data = pd.DataFrame([data])
-        print("Input DataFrame:", input_data)  # 打印DataFrame内容
+        # 展开打印 DataFrame
+        print("Input DataFrame:\n", input_data.to_string(index=False))
 
         # 进行预测
         prediction = model.predict(input_data)
