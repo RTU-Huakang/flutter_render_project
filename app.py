@@ -54,6 +54,13 @@ model = joblib.load("fault_gbt_model.pkl")
 def predict():
     try:
         data = request.get_json()
+        # 保留一位小数
+        for k, v in data.items():
+            try:
+                data[k] = round(float(v), 1)
+            except Exception:
+                pass
+
         input_data = pd.DataFrame([data])
         prediction = model.predict(input_data)
         prediction_level = int(prediction[0])
